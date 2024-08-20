@@ -15,7 +15,6 @@ defmodule Pile.MixProject do
     ]
   end
 
-
   def cli do
     [preferred_envs: [t: :test]]
   end
