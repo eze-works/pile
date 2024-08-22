@@ -41,19 +41,20 @@ defmodule Pile.Visitor do
   @callback finish(state()) :: state()
 
   @void_elements [
-    :area,
-    :base,
-    :br,
-    :col,
-    :embed,
-    :hr,
-    :img,
-    :input,
-    :link,
-    :meta,
-    :source,
-    :track,
-    :wbr
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "source",
+    "track",
+    "wbr",
+    "doctype!"
   ]
 
   # HTML TREE TRAVERSAL 
@@ -73,41 +74,22 @@ defmodule Pile.Visitor do
     _traverse(rest, visitor, new_state)
   end
 
+  defp _traverse([{:open, :_nil, nil} | rest], visitor, state) do
+    _traverse(rest, visitor, state)
+  end
+
   defp _traverse([{:open, tag, value} | rest], visitor, state) do
-    {attributes, children} =
-      case value do
-        string when is_binary(string) -> {%{}, string}
-        [map | rest] when is_map(map) -> {map, rest}
-        [tuple | _] when is_tuple(tuple) -> {%{}, value}
-        [] -> {%{}, []}
-        x -> raise(ArgumentError, "Expected tuple, map or string. Got <#{inspect(x)}>")
-      end
+    {occurences, children} = Keyword.pop_values(value, :_attr)
+    attributes = List.first(occurences) || []
 
     cond do
-      Enum.member?(@void_elements, tag) ->
+      Enum.member?(@void_elements, String.downcase(Atom.to_string(tag))) ->
         new_state = visitor.visit_void_element(state, tag, attributes)
         _traverse(rest, visitor, new_state)
 
-      is_binary(children) ->
-        new_state = visitor.visit_element_start(state, tag, attributes)
-        # Don't mess with the text in <script> & <style> tags
-        text_tag =
-          if tag == :script or tag == :style do
-            :_rawtext
-          else
-            :_text
-          end
-
-        stack = [{:open, text_tag, children} | [{:close, tag} | rest]]
-        _traverse(stack, visitor, new_state)
-
       true ->
         new_state = visitor.visit_element_start(state, tag, attributes)
-
-        children =
-          children
-          |> Enum.filter(&Function.identity/1)
-          |> Enum.map(fn {element, payload} -> {:open, element, payload} end)
+        children = Enum.map(children, fn {element, payload} -> {:open, element, payload} end)
 
         stack = children ++ [{:close, tag} | rest]
         _traverse(stack, visitor, new_state)

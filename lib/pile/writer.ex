@@ -55,9 +55,8 @@ defmodule Pile.Writer do
 
   defp get_indent(level), do: String.duplicate("  ", level)
 
-  defp format_attributes(%{} = attributes) do
+  defp format_attributes(attributes) do
     attributes
-    |> Map.to_list()
     |> Enum.map(fn {key, value} ->
       {key |> String.Chars.to_string() |> String.replace("_", "-"), value}
     end)
