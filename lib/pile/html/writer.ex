@@ -67,6 +67,7 @@ defmodule Pile.Html.Writer do
   end
 
   defp attribute_to_string({_key, false}), do: nil
+  defp attribute_to_string({_key, nil}), do: nil
   defp attribute_to_string({key, true}), do: " #{key}"
   defp attribute_to_string({key, value}), do: ~s( #{key}="#{value}")
 end
