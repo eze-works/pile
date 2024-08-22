@@ -83,4 +83,23 @@ defmodule Pile.HtmlTest do
            </button>
            """
   end
+
+  test "using the css attribute" do
+    css = Pile.css("background-color: black;")
+    css2 = Pile.css("background-color: black;")
+
+    data = [
+      body: [
+        div: [
+          p: [
+            %{css: css}
+          ]
+        ]
+      ],
+      img: [%{css: css2}]
+    ]
+
+    result = data |> to_html()
+    dbg(result)
+  end
 end
