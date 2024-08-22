@@ -1,11 +1,11 @@
 # This visitor returns a list of paths to elements with a `css` attribute
 # This is done keeping track of the path to elements as we open and close them
-defmodule Pile.Html.Visitor.StyleCollector do
+defmodule Pile.Visitor.StyleCollector do
   @moduledoc false
 
-  @behaviour Pile.Html.Visitor
+  @behaviour Pile.Visitor
 
-  @impl Pile.Html.Visitor
+  @impl Pile.Visitor
   def init(_opts) do
     %{
       current_path: [],
@@ -13,7 +13,7 @@ defmodule Pile.Html.Visitor.StyleCollector do
     }
   end
 
-  @impl Pile.Html.Visitor
+  @impl true
   def visit_element_start(state, tag, attributes) do
     state = %{state | current_path: [tag | state.current_path]}
 
@@ -24,25 +24,25 @@ defmodule Pile.Html.Visitor.StyleCollector do
     end
   end
 
-  @impl Pile.Html.Visitor
+  @impl true
   def visit_element_end(state, tag) do
     [^tag | rest] = state.current_path
     %{state | current_path: rest}
   end
 
-  @impl Pile.Html.Visitor
+  @impl true
   def visit_void_element(state, tag, attributes) do
     visit_element_end(visit_element_start(state, tag, attributes), tag)
   end
 
-  @impl Pile.Html.Visitor
+  @impl true
   def visit_text(state, _tag, _text), do: state
 
-  @impl Pile.Html.Visitor
+  @impl true
   def finish(state) do
     state.paths |> Enum.map(&Enum.reverse/1)
   end
 
-  defp has_ruleset(%{css: %Pile.Css.Ruleset{}}), do: true
+  defp has_ruleset(%{css: %Pile.Ruleset{}}), do: true
   defp has_ruleset(_), do: false
 end

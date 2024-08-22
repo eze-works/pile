@@ -1,4 +1,4 @@
-defmodule Pile.Css.Ruleset do
+defmodule Pile.Ruleset do
   @type t :: %__MODULE__{
           name: String.t(),
           content: String.t()
@@ -9,7 +9,7 @@ defmodule Pile.Css.Ruleset do
     name = "pile-style-#{:erlang.phash2(declaration_block)}"
     content = ".#{name} { #{declaration_block} }"
 
-    %Pile.Css.Ruleset{
+    %Pile.Ruleset{
       name: name,
       content: content
     }

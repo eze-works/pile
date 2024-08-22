@@ -1,8 +1,8 @@
-defmodule Pile.Html.Visitor.StyleCollectorTest do
+defmodule Pile.Visitor.StyleCollectorTest do
   use ExUnit.Case, async: true
 
-  alias Pile.Html.Visitor.StyleCollector
-  import Pile.Html.Visitor, only: [traverse: 3]
+  alias Pile.Visitor.StyleCollector
+  import Pile.Visitor, only: [traverse: 3]
 
   test "returns empty list when no css attributes exist" do
     node = {:body, [p: [%{class: "card"}]]}

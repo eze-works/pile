@@ -1,4 +1,4 @@
-defmodule Pile.Html.Writer do
+defmodule Pile.Writer do
   @moduledoc false
 
   def new(options) do

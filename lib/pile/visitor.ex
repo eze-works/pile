@@ -1,11 +1,11 @@
 # This module implements the visitor pattern to traverse an HTML tree. 
 #
-# A concrete visitor will implement the `Pile.Html.Visitor` behavior to do
+# A concrete visitor will implement the `Pile.Visitor` behavior to do
 # whatever it needs to with each node while the tree is being traversed.
 #
 # Structuring things this way separates the tree traversal code from whatever
 # we'd like to do while traversing it.
-defmodule Pile.Html.Visitor do
+defmodule Pile.Visitor do
   @moduledoc false
 
   @type state :: any()

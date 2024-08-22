@@ -1,40 +1,40 @@
-defmodule Pile.Html.Visitor.Serializer do
+defmodule Pile.Visitor.Serializer do
   @moduledoc false
-  @behaviour Pile.Html.Visitor
+  @behaviour Pile.Visitor
 
-  @impl Pile.Html.Visitor
+  @impl true
   def init(opts) do
-    Pile.Html.Writer.new(opts)
+    Pile.Writer.new(opts)
   end
 
-  @impl Pile.Html.Visitor
+  @impl true
   def visit_text(writer, :_text, text) do
-    Pile.Html.Writer.append_text(writer, escape_text(text))
+    Pile.Writer.append_text(writer, escape_text(text))
   end
 
-  @impl Pile.Html.Visitor
+  @impl true
   def visit_text(writer, :_rawtext, text) do
-    Pile.Html.Writer.append_text(writer, text)
+    Pile.Writer.append_text(writer, text)
   end
 
-  @impl Pile.Html.Visitor
+  @impl true
   def visit_void_element(writer, tag, attributes) do
-    Pile.Html.Writer.append_void_tag(writer, tag, attributes)
+    Pile.Writer.append_void_tag(writer, tag, attributes)
   end
 
-  @impl Pile.Html.Visitor
+  @impl true
   def visit_element_start(writer, tag, attributes) do
-    Pile.Html.Writer.append_start_tag(writer, tag, attributes)
+    Pile.Writer.append_start_tag(writer, tag, attributes)
   end
 
-  @impl Pile.Html.Visitor
+  @impl true
   def visit_element_end(writer, tag) do
-    Pile.Html.Writer.append_end_tag(writer, tag)
+    Pile.Writer.append_end_tag(writer, tag)
   end
 
-  @impl Pile.Html.Visitor
+  @impl true
   def finish(writer) do
-    Pile.Html.Writer.finish(writer)
+    Pile.Writer.finish(writer)
   end
 
   defp escape_text(text) when is_binary(text) do

@@ -1,6 +1,6 @@
-defmodule Pile.HtmlTest do
+defmodule PileTest do
   use ExUnit.Case, async: true
-  import Pile.Html, only: [to_html: 2, to_html: 1]
+  import Pile
 
   test "returns empty string when there is nothing to serialize" do
     assert [] |> to_html() == ""
@@ -84,22 +84,50 @@ defmodule Pile.HtmlTest do
            """
   end
 
-  test "using the css attribute" do
-    css = Pile.css("background-color: black;")
-    css2 = Pile.css("background-color: black;")
+  test "using the css attribute injects styles" do
+    fragment = [p: [%{css: css("color: black;")}]]
 
-    data = [
-      body: [
-        div: [
-          p: [
-            %{css: css}
-          ]
-        ]
-      ],
-      img: [%{css: css2}]
+    assert fragment |> to_html() ==
+             ~S(<style>.pile-style-126328789 { color: black; }</style><p class=" pile-style-126328789"></p>)
+
+    full = [
+      html: [head: [], p: [%{css: css("color: black;")}]]
     ]
 
-    result = data |> to_html()
-    dbg(result)
+    assert full |> to_html(indent: true) == """
+           <html>
+             <head>
+               <style>
+                 .pile-style-126328789 { color: black; }
+               </style>
+             </head>
+             <p class=" pile-style-126328789">
+             </p>
+           </html>
+           """
+  end
+
+  test "css attribute styles are de-duplicated" do
+    data = [
+      div: [
+        span: [
+          %{ class: "card", css: css("color: black;") }
+        ]
+      ],
+      img: [
+          %{ class: "image", css: css("color: black;") }
+      ]
+    ]
+
+    assert data |> to_html([indent: true]) == """
+    <style>
+      .pile-style-126328789 { color: black; }
+    </style>
+    <div>
+      <span class="card pile-style-126328789">
+      </span>
+    </div>
+    <img class="image pile-style-126328789">
+    """
   end
 end
