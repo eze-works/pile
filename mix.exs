@@ -4,19 +4,16 @@ defmodule Pile.MixProject do
   def project do
     [
       app: :pile,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.17",
-      start_permanent: Mix.env() == :prod,
       deps: deps(),
-      aliases: aliases(),
       docs: [
         extras: ["README.md"]
       ],
+      description: "A library for generating HTML markup in Elixir",
+      package: package(),
+      source_url: "https://github.com/eze-works/pile"
     ]
-  end
-
-  def cli do
-    [preferred_envs: [t: :test]]
   end
 
   def application do
@@ -25,15 +22,16 @@ defmodule Pile.MixProject do
     ]
   end
 
-  defp aliases do
-    [
-      t: "test --trace"
-    ]
-  end
-
   defp deps do
     [
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
+    ]
+  end
+
+  defp package do
+    [
+      licenses: ["MIT"],
+      links: %{"Source" => "https://github.com/eze-works/pile"},
     ]
   end
 end

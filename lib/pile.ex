@@ -68,7 +68,9 @@ defmodule Pile do
 
     rulesets =
       input
-      |> Enum.flat_map(fn node -> Pile.Visitor.traverse(node, Pile.Visitor.RulesetCollector, []) end)
+      |> Enum.flat_map(fn node ->
+        Pile.Visitor.traverse(node, Pile.Visitor.RulesetCollector, [])
+      end)
       |> Enum.map(fn ruleset -> ruleset.content end)
       |> MapSet.new()
       |> Enum.join("\n")
