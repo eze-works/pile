@@ -61,6 +61,15 @@ defmodule Pile.Normalize do
   end
 
   def run(map) when is_map(map) do
+    map =
+      case Map.fetch(map, :css) do
+        {:ok, %Pile.Ruleset{name: name}} ->
+          Map.update(map, :class, name, fn existing -> "#{existing} #{name}" end)
+
+        :error ->
+          map
+      end
+
     {:_attr, map}
   end
 
@@ -83,6 +92,6 @@ defmodule Pile.Normalize do
   end
 
   def run({atom, list}) when is_atom(atom) and is_list(list) do
-    {atom, list |> List.flatten |> Enum.map(fn member -> run(member) end)}
+    {atom, list |> List.flatten() |> Enum.map(fn member -> run(member) end)}
   end
 end

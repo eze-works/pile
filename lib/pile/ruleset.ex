@@ -1,4 +1,6 @@
 defmodule Pile.Ruleset do
+  @moduledoc false
+
   @type t :: %__MODULE__{
           name: String.t(),
           content: String.t()

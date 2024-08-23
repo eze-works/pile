@@ -44,7 +44,7 @@ defmodule PileTest do
   test "void elements do not have children" do
     data = [img: [p: []]]
     assert data |> to_html() == "<img>"
-    assert data |> to_html(indent: true) == "<img>\n"
+    assert data |> to_html(pretty: true) == "<img>\n"
   end
 
   test "void element matching is case insensitive" do
@@ -57,7 +57,7 @@ defmodule PileTest do
 
     assert data |> to_html() == "<div><p></p><span></span></div>"
 
-    assert data |> to_html(indent: true) == """
+    assert data |> to_html(pretty: true) == """
            <div>
              <p>
              </p>
@@ -74,13 +74,13 @@ defmodule PileTest do
     assert sample1 |> to_html() == "<p>string</p>"
     assert sample2 |> to_html() == "<p>string</p>"
 
-    assert sample1 |> to_html(indent: true) == """
+    assert sample1 |> to_html(pretty: true) == """
            <p>
              string
            </p>
            """
 
-    assert sample2 |> to_html(indent: true) == """
+    assert sample2 |> to_html(pretty: true) == """
            <p>
              string
            </p>
@@ -94,12 +94,12 @@ defmodule PileTest do
     assert sample1 |> to_html() == ~S(<p class="container"></p>)
     assert sample2 |> to_html() == ~S(<p class="container"></p>)
 
-    assert sample1 |> to_html(indent: true) == """
+    assert sample1 |> to_html(pretty: true) == """
            <p class="container">
            </p>
            """
 
-    assert sample2 |> to_html(indent: true) == """
+    assert sample2 |> to_html(pretty: true) == """
            <p class="container">
            </p>
            """
@@ -113,7 +113,7 @@ defmodule PileTest do
 
     assert data |> to_html() == ~S(<input readonly><button></button>)
 
-    assert data |> to_html(indent: true) == ~S"""
+    assert data |> to_html(pretty: true) == ~S"""
            <input readonly>
            <button>
            </button>
@@ -130,20 +130,20 @@ defmodule PileTest do
     fragment = [p: [%{css: css("color: black;")}]]
 
     assert fragment |> to_html() ==
-             ~S(<style>.pile-style-126328789 { color: black; }</style><p class=" pile-style-126328789"></p>)
+             ~S(<style>.pile-style-126328789 { color: black; }</style><p class="pile-style-126328789"></p>)
 
     full = [
       html: [head: [], p: [%{css: css("color: black;")}]]
     ]
 
-    assert full |> to_html(indent: true) == """
+    assert full |> to_html(pretty: true) == """
            <html>
              <head>
                <style>
                  .pile-style-126328789 { color: black; }
                </style>
              </head>
-             <p class=" pile-style-126328789">
+             <p class="pile-style-126328789">
              </p>
            </html>
            """
@@ -161,7 +161,7 @@ defmodule PileTest do
       ]
     ]
 
-    assert data |> to_html(indent: true) == """
+    assert data |> to_html(pretty: true) == """
            <style>
              .pile-style-126328789 { color: black; }
            </style>

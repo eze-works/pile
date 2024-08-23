@@ -45,6 +45,11 @@ defmodule Pile.NormalizeTest do
     assert run(%{}) == {:_attr, %{}}
   end
 
+  test "ruleset in attr is used to populate the class attribute" do
+    assert run(%{css: %Pile.Ruleset{name: "foo"}}) ==
+             {:_attr, %{css: %Pile.Ruleset{name: "foo"}, class: "foo"}}
+  end
+
   test "lists are flattened" do
     assert run({:div, [[p: "foo"]]}) == {:div, [p: [_text: "foo"]]}
   end

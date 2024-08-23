@@ -11,7 +11,7 @@ defmodule Pile.MixProject do
       aliases: aliases(),
       docs: [
         extras: ["README.md"]
-      ]
+      ],
     ]
   end
 
