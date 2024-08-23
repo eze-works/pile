@@ -22,8 +22,31 @@ defmodule Pile do
   @default_options_to_html [indent: false]
 
   @spec to_html(input :: keyword(), options :: keyword()) :: String.t()
-  @doc """
-  Converts an Elixir data structure to an HTML string
+  @doc ~S"""
+  Converts an Elixir keyword list into to an HTML string
+
+  Keys represents HTML elements and values represents their children. 
+
+      iex> Pile.to_html([div: [p: ["hello"]]])
+      "<div><p>hello</p></div>"
+  
+  If an element only has one text child, you do not need to put it in a list
+
+      iex> Pile.to_html([div: [p: "hello"]])
+      "<div><p>hello</p></div>"
+
+  Attributes are represented as a map at the start of a list:
+
+      iex> Pile.to_html([div: [%{class: "container"}, p: "hello"]])
+      "<div class=\"container\"><p>hello</p></div>"
+
+  If an element has attributes, but not children, you do not need to put it in a list
+
+      iex> Pile.to_html([div: %{class: "container"}])
+      "<div class=\"container\"></div>"
+
+  
+
   """
   def to_html(input, options \\ @default_options_to_html)
 
