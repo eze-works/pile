@@ -5,7 +5,7 @@ defmodule Pile do
   This library provides a way to convert plain Elixir data structures into HTML.
 
       iex> data = [
-      ...>   doctype!: %{html: true},
+      ...>   "!doctype": %{html: true},
       ...>   html: [
       ...>     head: [
       ...>       title: "Hello World"
@@ -13,7 +13,7 @@ defmodule Pile do
       ...>   ]
       ...> ]
       iex> Pile.to_html(data)
-      "<doctype! html><html><head><title>Hello World</title></head></html>"
+      "<!doctype html><html><head><title>Hello World</title></head></html>"
     
     See `Pile.to_html/2` for details about shape of data structure 
 
@@ -29,7 +29,7 @@ defmodule Pile do
 
   - `pretty`: Passing `true` causes the HTML output to be pretty-printed. Defaults to `false`
 
-  ## Input structure: 
+  ## HTML Elements: 
 
   Keys represents HTML elements and values represents their children. 
 
@@ -41,6 +41,8 @@ defmodule Pile do
       iex> Pile.to_html([div: [p: "hello"]])
       "<div><p>hello</p></div>"
 
+  ## Attributes
+
   Attributes are represented as a map at the start of a list:
 
       iex> Pile.to_html([div: [%{class: "container"}, p: "hello"]])
@@ -50,6 +52,18 @@ defmodule Pile do
 
       iex> Pile.to_html([div: %{class: "container"}])
       "<div class=\"container\"></div>"
+
+  Snake case attribute names are converted to kebab-case:
+      
+      iex> Pile.to_html([div: %{data_custom: "hello"}])
+      "<div data-custom=\"hello\"></div>"
+
+  Use booleans to indicate the presense or absence of [HTML boolean attributes](https://developer.mozilla.org/en-US/docs/Glossary/Boolean/HTML):
+
+      iex> Pile.to_html([input: %{readonly: true}])
+      "<input readonly>"
+      iex> Pile.to_html([input: %{readonly: false}])
+      "<input>"
   """
   def to_html(input, options \\ @default_options_to_html)
 

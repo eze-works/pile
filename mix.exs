@@ -4,7 +4,7 @@ defmodule Pile.MixProject do
   def project do
     [
       app: :pile,
-      version: "0.2.0",
+      version: "0.3.0",
       elixir: "~> 1.17",
       deps: deps(),
       docs: [

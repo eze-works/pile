@@ -54,7 +54,7 @@ defmodule Pile.Visitor do
     "source",
     "track",
     "wbr",
-    "doctype!"
+    "!doctype"
   ]
 
   # HTML TREE TRAVERSAL 
