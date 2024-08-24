@@ -50,10 +50,6 @@ defmodule Pile.NormalizeTest do
              {:_attr, %{css: %Pile.Ruleset{name: "foo"}, class: "foo"}}
   end
 
-  test "lists are flattened" do
-    assert run({:div, [[p: "foo"]]}) == {:div, [p: [_text: "foo"]]}
-  end
-
   test "recursive cases" do
     assert run({:div, ["foo", %{}]}) == {:div, [_text: "foo", _attr: %{}]}
     assert run({:div, [span: [p: []]]}) == {:div, [span: [p: [_nil: nil]]]}

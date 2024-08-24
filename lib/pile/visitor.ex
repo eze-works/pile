@@ -78,6 +78,12 @@ defmodule Pile.Visitor do
     _traverse(rest, visitor, state)
   end
 
+  defp _traverse([{:open, :_, list} | rest], visitor, state) when is_list(list) do
+    children = list |> Enum.map(fn {atom, value} -> {:open, atom, value} end)
+    stack = children ++ rest
+    _traverse(stack, visitor, state)
+  end
+
   defp _traverse([{:open, tag, value} | rest], visitor, state) do
     {occurences, children} = Keyword.pop_values(value, :_attr)
     attributes = List.first(occurences) || []

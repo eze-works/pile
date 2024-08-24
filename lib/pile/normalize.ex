@@ -92,6 +92,6 @@ defmodule Pile.Normalize do
   end
 
   def run({atom, list}) when is_atom(atom) and is_list(list) do
-    {atom, list |> List.flatten() |> Enum.map(fn member -> run(member) end)}
+    {atom, list |> Enum.map(fn member -> run(member) end)}
   end
 end

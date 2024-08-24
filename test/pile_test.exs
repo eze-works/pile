@@ -67,6 +67,22 @@ defmodule PileTest do
            """
   end
 
+  test "using the `_` element flattens lists" do
+    component = [
+      button: %{class: "btn"}
+    ]
+
+    html =
+      [
+        div: [
+          _: component
+        ]
+      ]
+      |> to_html()
+
+    assert html == ~S(<div><button class="btn"></button></div>)
+  end
+
   test "supports string children" do
     sample1 = [p: "string"]
     sample2 = [p: ["string"]]
