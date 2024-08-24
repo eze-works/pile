@@ -16,9 +16,9 @@ defmodule Pile.Visitor do
   @callback init(keyword()) :: state()
 
   @doc """
-  Handles an HTML text node. `atom` may be either `:_text` or `_rawtext`
+  Handles an HTML text node.
   """
-  @callback visit_text(state(), tag :: atom(), String.t()) :: state()
+  @callback visit_text(state(), String.t()) :: state()
 
   @doc """
   Handles an HTML void element.
@@ -53,8 +53,7 @@ defmodule Pile.Visitor do
     "meta",
     "source",
     "track",
-    "wbr",
-    "!doctype"
+    "wbr"
   ]
 
   # HTML TREE TRAVERSAL 
@@ -62,32 +61,17 @@ defmodule Pile.Visitor do
   # A standard depth-first traversal of an HTML tree. The visitor callbacks are
   # called whenever text, void, start and end tags are encountered.
   @doc false
-  def traverse({tag, definition}, visitor, visitor_options) do
+  def traverse({tag, attributes, children}, visitor, visitor_options) do
     state = visitor.init(visitor_options)
-    _traverse([{:open, tag, definition}], visitor, state)
+    _traverse([{:open, tag, attributes, children}], visitor, state)
   end
 
-  defp _traverse([{:open, atom, text} | rest], visitor, state)
-       when atom == :_text
-       when atom == :_rawtext do
-    new_state = visitor.visit_text(state, atom, text)
+  defp _traverse([{:open, text} | rest], visitor, state) when is_binary(text) do
+    new_state = visitor.visit_text(state, text)
     _traverse(rest, visitor, new_state)
   end
 
-  defp _traverse([{:open, :_nil, nil} | rest], visitor, state) do
-    _traverse(rest, visitor, state)
-  end
-
-  defp _traverse([{:open, :_, list} | rest], visitor, state) when is_list(list) do
-    children = list |> Enum.map(fn {atom, value} -> {:open, atom, value} end)
-    stack = children ++ rest
-    _traverse(stack, visitor, state)
-  end
-
-  defp _traverse([{:open, tag, value} | rest], visitor, state) do
-    {occurences, children} = Keyword.pop_values(value, :_attr)
-    attributes = List.first(occurences) || []
-
+  defp _traverse([{:open, tag, attributes, children} | rest], visitor, state) do
     cond do
       Enum.member?(@void_elements, String.downcase(Atom.to_string(tag))) ->
         new_state = visitor.visit_void_element(state, tag, attributes)
@@ -95,7 +79,14 @@ defmodule Pile.Visitor do
 
       true ->
         new_state = visitor.visit_element_start(state, tag, attributes)
-        children = Enum.map(children, fn {element, payload} -> {:open, element, payload} end)
+
+        children =
+          Enum.map(children, fn child ->
+            case child do
+              {t, a, c} -> {:open, t, a, c}
+              t when is_binary(t) -> {:open, t}
+            end
+          end)
 
         stack = children ++ [{:close, tag} | rest]
         _traverse(stack, visitor, new_state)

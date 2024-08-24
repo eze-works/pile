@@ -3,53 +3,73 @@ defmodule Pile.Visitor.Serializer do
   @behaviour Pile.Visitor
 
   @impl true
-  def init(opts) do
-    Pile.Writer.new(opts)
+  def init(options) do
+    if Keyword.get(options, :pretty, false) do
+      {:pretty, 0, []}
+    else
+      {:ugly, nil, []}
+    end
   end
 
   @impl true
-  def visit_text(writer, :_text, text) do
-    Pile.Writer.append_text(writer, escape_text(text))
+  def visit_element_start({:ugly, _, str}, element, attributes) do
+    attributes = format_attributes(attributes)
+    {:ugly, nil, ["<#{element}#{attributes}>" | str]}
+  end
+
+  def visit_element_start({:pretty, level, str}, element, attributes) do
+    attributes = format_attributes(attributes)
+    {:pretty, level + 1, ["#{get_indent(level)}<#{element}#{attributes}>\n" | str]}
   end
 
   @impl true
-  def visit_text(writer, :_rawtext, text) do
-    Pile.Writer.append_text(writer, text)
+  def visit_element_end({:ugly, _, str}, element) do
+    {:ugly, nil, ["</#{element}>" | str]}
+  end
+
+  def visit_element_end({:pretty, level, str}, element) do
+    {:pretty, level - 1, ["#{get_indent(level - 1)}</#{element}>\n" | str]}
   end
 
   @impl true
-  def visit_void_element(writer, tag, attributes) do
-    Pile.Writer.append_void_tag(writer, tag, attributes)
+  def visit_void_element({:ugly, _, str}, element, attributes) do
+    attributes = format_attributes(attributes)
+    {:ugly, nil, ["<#{element}#{attributes}>" | str]}
+  end
+
+  def visit_void_element({:pretty, level, str}, element, attributes) do
+    attributes = format_attributes(attributes)
+    {:pretty, level, ["#{get_indent(level)}<#{element}#{attributes}>\n" | str]}
   end
 
   @impl true
-  def visit_element_start(writer, tag, attributes) do
-    Pile.Writer.append_start_tag(writer, tag, attributes)
+  def visit_text({:ugly, _, str}, text) do
+    {:ugly, nil, [text | str]}
+  end
+
+  def visit_text({:pretty, level, str}, text) do
+    margin = "\n#{get_indent(level)}"
+    indented_text = text |> String.trim_trailing("\n") |> String.replace("\n", margin)
+    {:pretty, level, ["#{get_indent(level)}#{indented_text}\n" | str]}
   end
 
   @impl true
-  def visit_element_end(writer, tag) do
-    Pile.Writer.append_end_tag(writer, tag)
+  def finish({_, _, str}), do: str |> Enum.reverse()
+
+  defp get_indent(level), do: String.duplicate("  ", level)
+
+  defp format_attributes(attributes) do
+    attributes
+    |> Enum.map(fn {key, value} ->
+      {key |> String.Chars.to_string() |> String.replace("_", "-"), value}
+    end)
+    |> Enum.map(&attribute_to_string/1)
+    |> Enum.filter(&Function.identity/1)
+    |> Enum.join("")
   end
 
-  @impl true
-  def finish(writer) do
-    Pile.Writer.finish(writer)
-  end
-
-  defp escape_text(text) when is_binary(text) do
-    escaped =
-      for byte <- :binary.bin_to_list(text) do
-        case byte do
-          ?" -> "&quot;"
-          ?' -> "&#39;"
-          ?& -> "&amp;"
-          ?< -> "&lt;"
-          ?> -> "&gt;"
-          b -> b
-        end
-      end
-
-    IO.iodata_to_binary(escaped)
-  end
+  defp attribute_to_string({_key, false}), do: nil
+  defp attribute_to_string({_key, nil}), do: nil
+  defp attribute_to_string({key, true}), do: " #{key}"
+  defp attribute_to_string({key, value}), do: ~s( #{key}="#{value}")
 end

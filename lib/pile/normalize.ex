@@ -1,97 +1,61 @@
-# At its core, this library operates on a nested keyword list.
-# Keys are atoms named after the desired HTML element.
-# Values are keyword lists (or maps in the case of attributes)
+# Library users can ommit attributes, children or both.
 #
-# This would be very cumbersome for end users. Imagine having to write this
-#
-# ```
-# [
-#   div: [
-#     p: [
-#       _attr: %{},
-#       span: [
-#         _text: "Hello world"
-#       ],
-#       img: [
-#         _nil: nil
-#       ]
-#     ]
-#   ]
-# ]
-# ```
-#
-# Operating on a strict datastructure makes the code more straightforward at the expense of user experience.
-#
-# To remedy, users can use a more simplified datastructure that is uh... `Normalize`d into what the rest of the library expects
-# 
-# The above example can now be written as long as it is passed through the `run` function
-#
-# ```
-# [
-#  div: [
-#    p: [
-#      %{},
-#      span: "Hello world"
-#    ]
-#    img: []
-#  ]
-# ]
-# ```
+# The traversal algorithm is simplified if the input has a rigid shape, so this
+# module takes care of filling in empty attributes and children where there are
+# missing.
 defmodule Pile.Normalize do
   @moduledoc false
 
-  def run({:_text, text} = input) when is_binary(text) or is_number(text) do
-    input
+  def run(text) when is_binary(text) do
+    escape_text(text)
   end
 
-  def run({:_rawtext, text} = input) when is_binary(text) or is_number(text) do
-    input
+  def run({:_rawtext, text}) do
+    text
   end
 
-  def run({:_attr, map} = input) when is_map(map) do
-    input
+  def run({atom}) when is_atom(atom) do
+    run({atom, %{}, []})
   end
 
-  def run({:_nil, _} = input) do
-    input
+  def run({atom, text}) when is_atom(atom) and is_binary(text) do
+    run({atom, %{}, [text]})
   end
 
   def run({atom, map}) when is_atom(atom) and is_map(map) do
-    {atom, [run(map)]}
-  end
-
-  def run(map) when is_map(map) do
-    map =
-      case Map.fetch(map, :css) do
-        {:ok, %Pile.Ruleset{name: name}} ->
-          Map.update(map, :class, name, fn existing -> "#{existing} #{name}" end)
-
-        :error ->
-          map
-      end
-
-    {:_attr, map}
-  end
-
-  def run({atom, text})
-      when is_atom(atom) and is_binary(text)
-      when is_atom(atom) and is_number(text) do
-    {atom, [run(text)]}
-  end
-
-  def run(text) when is_binary(text) or is_number(text) do
-    {:_text, text}
-  end
-
-  def run([]) do
-    {:_nil, nil}
-  end
-
-  def run({atom, []}) do
-    {atom, [run([])]}
+    run({atom, map, []})
   end
 
   def run({atom, list}) when is_atom(atom) and is_list(list) do
-    {atom, list |> Enum.map(fn member -> run(member) end)}
+    run({atom, %{}, list})
+  end
+
+  def run({atom, tuple}) when is_atom(atom) and is_tuple(tuple) do
+    run({atom, %{}, [tuple]})
+  end
+
+  def run({atom, map, tuple}) when is_atom(atom) and is_map(map) and is_tuple(tuple) do
+    run({atom, map, [tuple]})
+  end
+
+  def run({atom, map, list}) when is_atom(atom) and is_map(map) and is_list(list) do
+    children = List.flatten(list)
+    {atom, map, Enum.map(children, &run/1)}
+  end
+
+  defp escape_text(text) when is_binary(text) do
+    escaped =
+      for byte <- :binary.bin_to_list(text) do
+        case byte do
+          ?" -> "&quot;"
+          ?' -> "&#39;"
+          ?& -> "&amp;"
+          ?< -> "&lt;"
+          ?> -> "&gt;"
+          b -> b
+        end
+      end
+
+    IO.iodata_to_binary(escaped)
   end
 end

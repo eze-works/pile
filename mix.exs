@@ -4,12 +4,9 @@ defmodule Pile.MixProject do
   def project do
     [
       app: :pile,
-      version: "0.4.0",
+      version: "0.5.0",
       elixir: "~> 1.17",
       deps: deps(),
-      docs: [
-        extras: ["README.md"]
-      ],
       description: "A library for generating HTML markup in Elixir",
       package: package(),
       source_url: "https://github.com/eze-works/pile"

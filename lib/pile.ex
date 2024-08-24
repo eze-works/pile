@@ -1,121 +1,93 @@
 defmodule Pile do
-  @moduledoc """
-
-  ## Introduction
-  This library provides a way to convert plain Elixir data structures into HTML.
-
-      iex> data = [
-      ...>   "!doctype": %{html: true},
-      ...>   html: [
-      ...>     head: [
-      ...>       title: "Hello World"
-      ...>     ]
-      ...>   ]
-      ...> ]
-      iex> Pile.to_html(data)
-      "<!doctype html><html><head><title>Hello World</title></head></html>"
+  @moduledoc ~S"""
+  This library allows representing HTML in Elixir. It uses tuples to represent elements, and maps to represent element attributes:
     
-    See `Pile.to_html/2` for details about shape of data structure 
-
-
+      iex> {:html,
+      ...>   {:head, [
+      ...>     {:title, "Hello World"},
+      ...>     {:link, %{rel: "stylesheet", href: "..."}},    
+      ...>   ]}
+      ...> }
+      ...> |> Pile.to_html()
+      ...> 
+      "<html><head><title>Hello World</title><link rel=\"stylesheet\" href=\"...\"></head></html>"
+    
+    See `Pile.to_html/2` for more details about the syntax 
   """
-  @default_options_to_html [pretty: false]
+
+  @default_options [pretty: false, doctype: false, iodata: false]
 
   @spec to_html(input :: keyword(), options :: keyword()) :: String.t()
   @doc ~S"""
-  Converts an Elixir keyword list into to an HTML string
+  Converts a tuple or list of tuples into an HTML string
 
   ## Options:
 
-  - `pretty`: Passing `true` causes the HTML output to be pretty-printed. Defaults to `false`
+  - `pretty`: Passing `true` causes the HTML output to be pretty-printed. Defaults to `false`.
+  - `doctype`: Prepend the `<!DOCTYPE html>` to the resulting string. Defaults to `false`.
+  - `iodata`: Return the HTML as iodata. Defaults to `false`.
 
-  ## HTML Elements: 
+  ## Syntax:
 
-  Keys represents HTML elements and values represents their children. 
+  A tuple begining with an atom represents an HTML element:
 
-      iex> Pile.to_html([div: [p: ["hello"]]])
-      "<div><p>hello</p></div>"
+      iex> {:div} |> Pile.to_html()
+      "<div></div>"
 
-  If an element only has one text child, you do not need to put it in a list
-
-      iex> Pile.to_html([div: [p: "hello"]])
-      "<div><p>hello</p></div>"
-
-  ## Attributes
-
-  Attributes are represented as a map at the start of a list:
-
-      iex> Pile.to_html([div: [%{class: "container"}, p: "hello"]])
-      "<div class=\"container\"><p>hello</p></div>"
-
-  If an element has attributes, but not children, you do not need to put it in a list
-
-      iex> Pile.to_html([div: %{class: "container"}])
-      "<div class=\"container\"></div>"
-
-  Snake case attribute names are converted to kebab-case:
+  An element can have a child:
       
-      iex> Pile.to_html([div: %{data_custom: "hello"}])
-      "<div data-custom=\"hello\"></div>"
+      iex> {:div, {:p}} |> Pile.to_html()
+      "<div><p></p></div>"
 
-  Use booleans to indicate the presense or absence of [HTML boolean attributes](https://developer.mozilla.org/en-US/docs/Glossary/Boolean/HTML):
+  If an element has more than one child, place the children in a list:
 
-      iex> Pile.to_html([input: %{readonly: true}])
-      "<input readonly>"
-      iex> Pile.to_html([input: %{readonly: false}])
-      "<input>"
+      iex> {:div, [{:p}, {:p}]} |> Pile.to_html()
+      "<div><p></p><p></p></div>"
+
+  Strings are HTML-escaped, then rendered as text:
+      
+      iex> {:div, "hello"} |> Pile.to_html()
+      "<div>hello</div>"
+      iex> {:div, "<span>"} |> Pile.to_html()
+      "<div>&lt;span&gt;</div>"
+
+  To bypass HTML escaping, using the special `_rawtext` element:
+      
+      iex> {:div, {:_rawtext, "<span>"}} |> Pile.to_html()
+      "<div><span></div>"
+
+  An element may have attributes. These are represented as a map, and if present must come right after the element name:
+
+      iex> {:div, %{class: "container"}} |> Pile.to_html()
+      "<div class=\"container\"></div>"
+      iex> {:div, %{class: "container"}, ["foo", {:p}]} |> Pile.to_html()
+      "<div class=\"container\">foo<p></p></div>"
+
+  An attribute with a boolean value is treated as an [HTML boolean attribute](https://developer.mozilla.org/en-US/docs/Glossary/Boolean/HTML)
+
+      iex> {:div, %{readonly: true}} |> Pile.to_html()
+      "<div readonly></div>"
+      iex> {:div, %{readonly: false}} |> Pile.to_html()
+      "<div></div>"
   """
-  def to_html(input, options \\ @default_options_to_html)
+  def to_html(tuple, opts \\ @default_options) when is_tuple(tuple) do
+    opts = Keyword.validate!(opts, @default_options)
 
-  def to_html([], _opts), do: ""
+    normalized = Pile.Normalize.run(tuple)
 
-  def to_html([_ | _] = input, opts) do
-    opts = Keyword.validate!(opts, @default_options_to_html)
+    html = Pile.Visitor.traverse(normalized, Pile.Visitor.Serializer, opts)
 
-    if not Keyword.keyword?(input) do
-      raise(ArgumentError, "input should be a keyword list")
+    html =
+      if opts[:doctype] do
+        ["<!DOCTYPE html>" | html]
+      else
+        html
+      end
+
+    if opts[:iodata] do
+      html
+    else
+      IO.iodata_to_binary(html)
     end
-
-    input =
-      input
-      |> Enum.map(fn {atom, value} -> Pile.Normalize.run({atom, value}) end)
-
-    rulesets =
-      input
-      |> Enum.flat_map(fn node ->
-        Pile.Visitor.traverse(node, Pile.Visitor.RulesetCollector, [])
-      end)
-      |> Enum.map(fn ruleset -> ruleset.content end)
-      |> MapSet.new()
-      |> Enum.join("\n")
-
-    # if there is already a `<head>` element in the html, place the style in it.
-    # Otherwise, prepend it to whatever html we have
-    path =
-      if input[:html][:head] do
-        [:html, :head, :style]
-      else
-        [:style]
-      end
-
-    input =
-      if String.length(rulesets) > 0 do
-        put_in(input, path, _rawtext: rulesets)
-      else
-        input
-      end
-
-    input
-    |> Enum.map(fn node ->
-      Pile.Visitor.traverse(node, Pile.Visitor.Serializer, opts)
-    end)
-    |> Enum.join("")
-  end
-
-  @doc """
-  Creates a CSS ruleset that can be attached as an attribute to an HTML element
-  """
-  def css(declaration_block) do
-    Pile.Ruleset.new(declaration_block)
   end
 end
