@@ -30,14 +30,6 @@ defmodule Pile.Normalize do
     run({atom, %{}, [tuple]})
   end
 
-  def run({atom, map, text}) when is_atom(atom) and is_map(map) and is_binary(text) do
-    run({atom, map, [text]})
-  end
-
-  def run({atom, map, tuple}) when is_atom(atom) and is_map(map) and is_tuple(tuple) do
-    run({atom, map, [tuple]})
-  end
-
   def run(tuple) when is_tuple(tuple) do
     [atom, next | rest] = Tuple.to_list(tuple)
 
