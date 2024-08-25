@@ -44,6 +44,14 @@ defmodule Pile do
       iex> {:div, [{:p}, {:p}]} |> Pile.to_html()
       "<div><p></p><p></p></div>"
 
+  Lists are automatically flattened, which is particularly useful for iteration & composition:
+
+      iex> {:div, [
+      ...>   {:p},
+      ...>   1..2 |> Enum.map(fn _ -> {:span} end)
+      ...> ]} |> Pile.to_html()
+      "<div><p></p><span></span><span></span></div>"
+
   Strings are HTML-escaped, then rendered as text:
       
       iex> {:div, "hello"} |> Pile.to_html()

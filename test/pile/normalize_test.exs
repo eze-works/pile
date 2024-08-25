@@ -39,6 +39,12 @@ defmodule Pile.NormalizeTest do
     assert run({:div, {:p}}) == {:div, %{}, [{:p, %{}, []}]}
   end
 
+  test "three element tuples" do
+    assert run({:div, %{a: "b"}, "foo"}) == {:div, %{a: "b"}, ["foo"]}
+    assert run({:div, %{a: "b"}, [{:p}]}) == {:div, %{a: "b"}, [{:p, %{}, []}]}
+    assert run({:div, %{a: "b"}, {:p}}) == {:div, %{a: "b"}, [{:p, %{}, []}]}
+  end
+
   test "nested children get flattend" do
     data = {:div, [[{:p}], [{:span}]]}
     assert run(data) == {:div, %{}, [{:p, %{}, []}, {:span, %{}, []}]}
