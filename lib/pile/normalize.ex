@@ -15,7 +15,7 @@ defmodule Pile.Normalize do
   end
 
   def run({atom}) when is_atom(atom) do
-    run({atom, %{}, []})
+    {atom, %{}, []}
   end
 
   def run({atom, text}) when is_atom(atom) and is_binary(text) do
@@ -23,11 +23,7 @@ defmodule Pile.Normalize do
   end
 
   def run({atom, map}) when is_atom(atom) and is_map(map) do
-    run({atom, map, []})
-  end
-
-  def run({atom, list}) when is_atom(atom) and is_list(list) do
-    run({atom, %{}, list})
+    {atom, map, []}
   end
 
   def run({atom, tuple}) when is_atom(atom) and is_tuple(tuple) do
@@ -42,9 +38,11 @@ defmodule Pile.Normalize do
     run({atom, map, [tuple]})
   end
 
-  def run({atom, map, list}) when is_atom(atom) and is_map(map) and is_list(list) do
-    children = List.flatten(list)
-    {atom, map, Enum.map(children, &run/1)}
+  def run(tuple) when is_tuple(tuple) do
+    [atom, next | rest] = Tuple.to_list(tuple)
+
+    {map, children} = if is_map(next), do: {next, rest}, else: {%{}, [next | rest]}
+    {atom, map, Enum.map(List.flatten(children), &run/1)}
   end
 
   defp escape_text(text) when is_binary(text) do

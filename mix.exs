@@ -4,7 +4,7 @@ defmodule Pile.MixProject do
   def project do
     [
       app: :pile,
-      version: "0.6.0",
+      version: "0.7.0",
       elixir: "~> 1.17",
       deps: deps(),
       description: "A library for generating HTML markup in Elixir",

@@ -60,9 +60,6 @@ defmodule Pile.Visitor.Serializer do
 
   defp format_attributes(attributes) do
     attributes
-    |> Enum.map(fn {key, value} ->
-      {key |> String.Chars.to_string() |> String.replace("_", "-"), value}
-    end)
     |> Enum.map(&attribute_to_string/1)
     |> Enum.filter(&Function.identity/1)
     |> Enum.join("")

@@ -3,10 +3,10 @@ defmodule Pile do
   This library allows representing HTML in Elixir. It uses tuples to represent elements, and maps to represent element attributes:
     
       iex> {:html,
-      ...>   {:head, [
+      ...>   {:head, 
       ...>     {:title, "Hello World"},
       ...>     {:link, %{rel: "stylesheet", href: "..."}},    
-      ...>   ]}
+      ...>   }
       ...> }
       ...> |> Pile.to_html()
       ...> 
@@ -19,7 +19,7 @@ defmodule Pile do
 
   @spec to_html(input :: keyword(), options :: keyword()) :: String.t()
   @doc ~S"""
-  Converts a tuple or list of tuples into an HTML string
+  Converts a tuple into an HTML string
 
   ## Options:
 
@@ -34,22 +34,17 @@ defmodule Pile do
       iex> {:div} |> Pile.to_html()
       "<div></div>"
 
-  An element can have a child:
+  Elements can have children:
       
-      iex> {:div, {:p}} |> Pile.to_html()
-      "<div><p></p></div>"
-
-  If an element has more than one child, place the children in a list:
-
-      iex> {:div, [{:p}, {:p}]} |> Pile.to_html()
+      iex> {:div, {:p}, {:p}} |> Pile.to_html()
       "<div><p></p><p></p></div>"
 
   Lists are automatically flattened, which is particularly useful for iteration & composition:
 
-      iex> {:div, [
+      iex> {:div, 
       ...>   {:p},
       ...>   1..2 |> Enum.map(fn _ -> {:span} end)
-      ...> ]} |> Pile.to_html()
+      ...> } |> Pile.to_html()
       "<div><p></p><span></span><span></span></div>"
 
   Strings are HTML-escaped, then rendered as text:
@@ -64,11 +59,11 @@ defmodule Pile do
       iex> {:div, {:_rawtext, "<span>"}} |> Pile.to_html()
       "<div><span></div>"
 
-  An element may have attributes. These are represented as a map, and if present must come right after the element name:
+  Elements may have attributes. These are represented as a map, and if present must come right after the element name:
 
       iex> {:div, %{class: "container"}} |> Pile.to_html()
       "<div class=\"container\"></div>"
-      iex> {:div, %{class: "container"}, ["foo", {:p}]} |> Pile.to_html()
+      iex> {:div, %{class: "container"}, "foo", {:p}} |> Pile.to_html()
       "<div class=\"container\">foo<p></p></div>"
 
   An attribute with a boolean value is treated as an [HTML boolean attribute](https://developer.mozilla.org/en-US/docs/Glossary/Boolean/HTML)
