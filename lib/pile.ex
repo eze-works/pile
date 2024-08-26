@@ -19,7 +19,7 @@ defmodule Pile do
 
   @spec to_html(input :: keyword(), options :: keyword()) :: String.t()
   @doc ~S"""
-  Converts a tuple into an HTML string
+  Converts a tuple (or a list of tuples) into an HTML string
 
   ## Options:
 
@@ -73,12 +73,14 @@ defmodule Pile do
       iex> {:div, %{readonly: false}} |> Pile.to_html()
       "<div></div>"
   """
-  def to_html(tuple, opts \\ @default_options) when is_tuple(tuple) do
+  def to_html(input, opts \\ @default_options) when is_tuple(input) or is_list(input) do
     opts = Keyword.validate!(opts, @default_options)
 
-    normalized = Pile.Normalize.run(tuple)
-
-    html = Pile.Visitor.traverse(normalized, Pile.Visitor.Serializer, opts)
+    input = if is_tuple(input), do: [input], else: input
+    normalized = input |> Enum.map(&Pile.Normalize.run/1)
+    
+    html =
+      normalized |> Enum.map(fn h -> Pile.Visitor.traverse(h, Pile.Visitor.Serializer, opts) end)
 
     html =
       if opts[:doctype] do

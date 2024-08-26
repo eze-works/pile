@@ -38,7 +38,7 @@ defmodule PileTest do
   end
 
   test "outputing iodata" do
-    assert {:div, {:p}} |> to_html(iodata: true) == ["<div>", "<p>", "</p>", "</div>"]
+    assert {:div, {:p}} |> to_html(iodata: true) == [["<div>", "<p>", "</p>", "</div>"]]
   end
 
   test "prepending the doctype" do
